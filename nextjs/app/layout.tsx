@@ -1,49 +1,45 @@
-import type {Metadata} from "next";
+import type { Metadata } from "next";
+import { Inter, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
-import {BackgroundWave} from "@/components/background-wave";
-import Link from "next/link";
-import {ElevenLabsLogo, GithubLogo} from "@/components/logos";
+import { Navigation } from "@/components/navigation";
+import { Toaster } from "@/components/ui/toaster";
+
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: '--font-inter',
+});
+
+const bricolage = Bricolage_Grotesque({ 
+  subsets: ["latin"],
+  variable: '--font-bricolage',
+});
 
 export const metadata: Metadata = {
-    title: "ConvAI",
+  title: "MindLoom - AI-Powered Voice Journal & Goal Tracker",
+  description: "Transform your thoughts into insights with conversational AI journaling and intelligent goal tracking.",
+  keywords: ["journal", "ai journal", "voice journal", "goal tracking", "mindfulness", "productivity"],
+  authors: [{ name: "Sathvik" }],
+  openGraph: {
+    title: "MindLoom - AI-Powered Voice Journal & Goal Tracker",
+    description: "Transform your thoughts into insights with conversational AI journaling and intelligent goal tracking.",
+    type: "website",
+  },
 };
 
-export default function RootLayout({children}: Readonly<{ children: React.ReactNode }>) {
-    return (
-        <html lang="en" className={"h-full w-full"}>
-        <body className={`antialiased w-full h-full lex flex-col`}>
-        <div className="flex flex-col flex-grow w-full items-center justify-center sm:px-4">
-            <nav
-                className={
-                    "sm:fixed w-full top-0 left-0 grid grid-cols-2 py-4 px-8"
-                }
-            >
-                <div className={"flex"}>
-                    <Link href={"/"} prefetch={true}>
-                        <ElevenLabsLogo
-                            className={"h-[15px] w-auto hover:text-gray-500"}
-                        />
-                    </Link>
-                </div>
-
-                <div className={"flex gap-4 justify-end"}>
-                    <Link
-                        href="https://github.com/jonatanvm/convai-demo"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={"py-0.5"}
-                        aria-label="View source on GitHub"
-                    >
-                        <GithubLogo
-                            className={"w-5 h-5 hover:text-gray-500 text-[#24292f]"}
-                        />
-                    </Link>
-                </div>
-            </nav>
-            {children}
-            <BackgroundWave/>
-        </div>
-        </body>
-        </html>
-    );
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
+      <body className="font-inter bg-gradient-to-br from-gray-900 via-gray-950 to-black text-white">
+        <Navigation />
+        <main className="min-h-screen">
+          {children}
+        </main>
+        <Toaster />
+      </body>
+    </html>
+  );
 }

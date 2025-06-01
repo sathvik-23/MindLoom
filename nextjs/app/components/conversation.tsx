@@ -8,7 +8,7 @@ export function Conversation() {
   const [messages, setMessages] = useState<string[]>([])
   const conversationIdRef = useRef<string | null>(null)
   const dbConversationUUIDRef = useRef<string | null>(null)
-  const userName = 'Sathvik' // Optional: you can collect this from a form/input
+  const userName = 'Sathvik'
 
   const conversation = useConversation({
     onConnect: () => {

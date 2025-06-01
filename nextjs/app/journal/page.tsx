@@ -1,15 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Conversation } from '../components/conversation'
 import { JournalSidebar } from '@/components/journal-sidebar'
 import { JournalEntries } from '@/components/journal-entries'
 import { motion } from 'framer-motion'
-import { BookOpen, Mic, Calendar, Tag, Search } from 'lucide-react'
+import { BookOpen, Mic, Calendar, Target, Search, Filter, X } from 'lucide-react'
 
 export default function JournalPage() {
   const [activeView, setActiveView] = useState<'conversation' | 'entries'>('conversation')
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeFilters, setActiveFilters] = useState<string[]>([])
+  
+  const filters = [
+    { id: 'goals', name: 'Goals' },
+    { id: 'emotions', name: 'Emotions' },
+    { id: 'insights', name: 'Insights' },
+    { id: 'decisions', name: 'Decisions' },
+  ]
+  
+  const toggleFilter = (filterId: string) => {
+    setActiveFilters(prev => 
+      prev.includes(filterId)
+        ? prev.filter(id => id !== filterId)
+        : [...prev, filterId]
+    )
+  }
 
   return (
     <div className="flex h-screen pt-16">
@@ -40,7 +56,7 @@ export default function JournalPage() {
                     placeholder="Search entries..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                    className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors w-[220px]"
                   />
                 </div>                
                 <div className="flex bg-white/5 rounded-lg p-1">
@@ -69,6 +85,47 @@ export default function JournalPage() {
                 </div>
               </div>
             </div>
+            
+            {/* Search filters - only visible when in entries view */}
+            {activeView === 'entries' && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="pt-3 pb-1"
+              >
+                <div className="flex items-center gap-3">
+                  <Filter className="h-4 w-4 text-gray-400" />
+                  <div className="flex flex-wrap gap-2">
+                    {filters.map(filter => (
+                      <button
+                        key={filter.id}
+                        onClick={() => toggleFilter(filter.id)}
+                        className={`px-3 py-1 text-xs rounded-full flex items-center gap-1 transition-colors ${
+                          activeFilters.includes(filter.id)
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        }`}
+                      >
+                        {filter.name}
+                        {activeFilters.includes(filter.id) && (
+                          <X className="h-3 w-3" />
+                        )}
+                      </button>
+                    ))}
+                    
+                    {activeFilters.length > 0 && (
+                      <button
+                        onClick={() => setActiveFilters([])}
+                        className="px-3 py-1 text-xs rounded-full bg-white/5 text-gray-300 hover:bg-white/10 transition-colors"
+                      >
+                        Clear all
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
         
@@ -89,7 +146,7 @@ export default function JournalPage() {
                 </div>
               </div>
             ) : (
-              <JournalEntries searchQuery={searchQuery} />
+              <JournalEntries searchQuery={searchQuery} filters={activeFilters} />
             )}
           </motion.div>
         </div>

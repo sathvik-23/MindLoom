@@ -2,9 +2,10 @@
 
 import DailyLogs from '@/components/DailyLogs';
 import DailySummary from '@/components/DailySummary';
+import GoalTracker from '@/components/GoalTracker';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, BarChart3, Sparkles } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, BarChart3, Sparkles, Target } from 'lucide-react';
 import { BackgroundWaves } from '@/components/background-waves';
 
 export default function Dashboard() {
@@ -48,7 +49,7 @@ export default function Dashboard() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm mb-6">
               <BarChart3 className="h-4 w-4 text-indigo-400" />
-              <span className="text-gray-200">Daily Dashboard</span>
+              <span className="text-gray-200">Goal Insights & Daily Progress</span>
             </div>
             
             <h1 className="font-bricolage text-4xl sm:text-5xl font-bold mb-4">
@@ -96,22 +97,34 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
+            {/* Goal Tracker */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <DailyLogs date={selectedDate} />
+              <GoalTracker date={selectedDate} />
             </motion.div>
             
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <DailySummary date={selectedDate} />
-            </motion.div>
+            {/* Daily Logs and Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <DailyLogs date={selectedDate} />
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <DailySummary date={selectedDate} />
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>

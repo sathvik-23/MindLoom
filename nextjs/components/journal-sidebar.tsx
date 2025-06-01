@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Hash, TrendingUp, Clock, ChevronRight } from 'lucide-react'
+import { Calendar, Target, TrendingUp, Clock, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const recentEntries = [
@@ -11,15 +11,21 @@ const recentEntries = [
   { id: 4, date: 'May 29', title: 'Gratitude Practice', mood: '🙏' },
 ]
 
-const tags = [
-  { name: 'personal-growth', count: 23 },
-  { name: 'work', count: 18 },
-  { name: 'relationships', count: 12 },
-  { name: 'health', count: 15 },
+const goals = [
+  { name: 'Exercise Routine', progress: 75, category: 'Fitness' },
+  { name: 'Python Learning', progress: 67, category: 'Education' },
+  { name: 'Work-Life Balance', progress: 75, category: 'Wellbeing' },
+  { name: 'Meditation', progress: 86, category: 'Mindfulness' },
 ]
 
 export function JournalSidebar() {
   const [collapsed, setCollapsed] = useState(false)
+
+  const getProgressColor = (progress: number) => {
+    if (progress >= 75) return 'bg-green-500';
+    if (progress >= 50) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
 
   return (
     <div className={cn(
@@ -66,23 +72,34 @@ export function JournalSidebar() {
               </div>
             </div>
             
-            {/* Tags */}
+            {/* Goals */}
             <div className="px-4 py-2 mt-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                Popular Tags
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center">
+                <Target className="h-3 w-3 mr-1" />
+                Goal Progress
               </h3>
-              <div className="space-y-2">
-                {tags.map((tag) => (
-                  <button
-                    key={tag.name}
-                    className="w-full text-left p-2 rounded-lg hover:bg-white/5 transition-colors flex items-center justify-between"
+              <div className="space-y-3">
+                {goals.map((goal) => (
+                  <div
+                    key={goal.name}
+                    className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                   >
-                    <div className="flex items-center gap-2">
-                      <Hash className="h-3 w-3 text-indigo-400" />
-                      <span className="text-sm">{tag.name}</span>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium">{goal.name}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10">
+                        {goal.category}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-400">{tag.count}</span>
-                  </button>
+                    <div className="flex items-center justify-between">
+                      <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mr-2">
+                        <div
+                          className={cn("h-full rounded-full", getProgressColor(goal.progress))}
+                          style={{ width: `${goal.progress}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium whitespace-nowrap">{goal.progress}%</span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

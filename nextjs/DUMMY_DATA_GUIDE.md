@@ -1,4 +1,4 @@
-# Dummy Data Summary & Quick Setup
+<!-- # Dummy Data Summary & Quick Setup
 
 ## What's Included
 
@@ -67,4 +67,4 @@ Energized → Accomplished → Overwhelmed → Frustrated → Hopeful → Peacef
 3. Pick one enhancement to build first (recommend Goal Tracking UI)
 4. Use the conversation data to make AI summaries more insightful
 
-The dummy data provides a realistic foundation for testing and developing these features. Each conversation includes natural language about goals, progress, emotions, and reflections that your AI can learn to parse and summarize effectively.
+The dummy data provides a realistic foundation for testing and developing these features. Each conversation includes natural language about goals, progress, emotions, and reflections that your AI can learn to parse and summarize effectively. -->

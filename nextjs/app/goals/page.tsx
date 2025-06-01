@@ -1,9 +1,20 @@
 'use client'
 
-import { Target, Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Target } from 'lucide-react'
 import { motion } from 'framer-motion'
+import GoalTracker from '@/components/GoalTracker'
 
 export default function GoalsPage() {
+  const [today, setToday] = useState<string>('')
+
+  useEffect(() => {
+    const now = new Date()
+    setToday(now.toISOString().split('T')[0])
+  }, [])
+
+  if (!today) return null // prevent hydration mismatch
+
   return (
     <div className="min-h-screen pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -12,36 +23,35 @@ export default function GoalsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
+          {/* Header Section */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bricolage font-bold mb-4">
+            {/* Pill-style subtitle */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm mb-6">
+              {/* <Target className="h-4 w-4 text-orange-400" /> */}
+              <span className="text-orange-300">🎯 Goal Progress Tracker</span>
+            </div>
+
+            {/* Main gradient title */}
+            <h1 className="font-bricolage text-4xl sm:text-5xl font-bold mb-4">
               <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                Your Goals
+                Your Goal Journey
               </span>
             </h1>
+
+            {/* Description */}
             <p className="text-xl text-gray-300">
               Track your progress and achieve your dreams
             </p>
           </div>
-          
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Goal cards will go here */}
-            <motion.div
-              whileHover={{ y: -5 }}
-              className="p-6 rounded-xl bg-white/5 border border-white/10 hover:border-orange-500/30 transition-all"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <Target className="h-8 w-8 text-orange-400" />
-                <span className="text-sm text-gray-400">75% Complete</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Complete MindLoom MVP</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Build and launch the first version of MindLoom with core features
-              </p>
-              <div className="w-full bg-white/10 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-400 to-red-400 h-2 rounded-full" style={{ width: '75%' }} />
-              </div>
-            </motion.div>
-          </div>
+
+          {/* Goal Tracker Component */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <GoalTracker date={today} />
+          </motion.div>
         </motion.div>
       </div>
     </div>

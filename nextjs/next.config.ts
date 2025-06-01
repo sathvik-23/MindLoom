@@ -6,9 +6,9 @@ const nextConfig = {
 
   // ✅ Allow specific development origins by hostname only
   allowedDevOrigins: [
-    "ec59-60-243-255-160.ngrok-free.app", // ✅ Hostname only, no protocol
+    'affb-60-243-255-160.ngrok-free.app', // ✅ Hostname only, no protocol
     // Add more if needed, e.g., "*.ngrok-free.app"
   ],
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

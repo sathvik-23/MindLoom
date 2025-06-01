@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
@@ -9,21 +9,21 @@ export async function GET() {
           'xi-api-key': process.env.ELEVENLABS_API_KEY!,
         },
       }
-    );
+    )
 
     if (!res.ok) {
-      const text = await res.text();
-      console.error('❌ ElevenLabs API error:', text);
-      throw new Error('Failed to get signed URL');
+      const text = await res.text()
+      console.error('❌ ElevenLabs API error:', text)
+      throw new Error('Failed to get signed URL')
     }
 
-    const data = await res.json();
-    return NextResponse.json({ signedUrl: data.signed_url });
+    const data = await res.json()
+    return NextResponse.json({ signedUrl: data.signed_url })
   } catch (err) {
-    console.error('🚨 API Route Error:', err);
+    console.error('🚨 API Route Error:', err)
     return NextResponse.json(
       { error: 'Failed to generate signed URL' },
       { status: 500 }
-    );
+    )
   }
 }

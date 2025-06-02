@@ -1,35 +1,40 @@
-'use client';
+'use client'
 
-import DailyLogs from '@/components/DailyLogs';
-import DailySummary from '@/components/DailySummary';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
-import { BackgroundWaves } from '@/components/background-waves';
+import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import DailyLogs from '@/components/DailyLogs'
+import DailySummary from '@/components/DailySummary'
+import { motion } from 'framer-motion'
+import { Calendar, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react'
+import { BackgroundWaves } from '@/components/background-waves'
 
 export default function Dashboard() {
-  const today = new Date('2025-06-02');
-  const [selectedDate, setSelectedDate] = useState('2025-06-01');
+  const searchParams = useSearchParams()
+  const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
+
+  const initialDate = searchParams.get('date') || todayStr
+  const [selectedDate, setSelectedDate] = useState(initialDate)
 
   const changeDate = (days: number) => {
-    const current = new Date(selectedDate);
-    current.setDate(current.getDate() + days);
+    const current = new Date(selectedDate)
+    current.setDate(current.getDate() + days)
     if (current <= today) {
-      setSelectedDate(current.toISOString().split('T')[0]);
+      setSelectedDate(current.toISOString().split('T')[0])
     }
-  };
+  }
 
   const formatDisplayDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-    });
-  };
+    })
+  }
 
-  const isToday = selectedDate === today.toISOString().split('T')[0];
+  const isToday = selectedDate === todayStr
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -69,7 +74,9 @@ export default function Dashboard() {
 
             <div className="flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
               <Calendar className="h-5 w-5 text-indigo-400" />
-              <span className="font-medium text-lg">{formatDisplayDate(selectedDate)}</span>
+              <span className="font-medium text-lg">
+                {formatDisplayDate(selectedDate)}
+              </span>
               {isToday && (
                 <span className="px-2 py-1 text-xs rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                   Today
@@ -112,5 +119,5 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  );
+  )
 }

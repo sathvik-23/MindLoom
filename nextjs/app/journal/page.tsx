@@ -5,24 +5,34 @@ import { Conversation } from '../components/conversation'
 import { JournalSidebar } from '@/components/journal-sidebar'
 import { JournalEntries } from '@/components/journal-entries'
 import { motion } from 'framer-motion'
-import { BookOpen, Mic, Calendar, Target, Search, Filter, X } from 'lucide-react'
+import {
+  BookOpen,
+  Mic,
+  Calendar,
+  Target,
+  Search,
+  Filter,
+  X,
+} from 'lucide-react'
 
 export default function JournalPage() {
-  const [activeView, setActiveView] = useState<'conversation' | 'entries'>('conversation')
+  const [activeView, setActiveView] = useState<'conversation' | 'entries'>(
+    'conversation'
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<string[]>([])
-  
+
   const filters = [
     { id: 'goals', name: 'Goals' },
     { id: 'emotions', name: 'Emotions' },
     { id: 'insights', name: 'Insights' },
     { id: 'decisions', name: 'Decisions' },
   ]
-  
+
   const toggleFilter = (filterId: string) => {
-    setActiveFilters(prev => 
+    setActiveFilters((prev) =>
       prev.includes(filterId)
-        ? prev.filter(id => id !== filterId)
+        ? prev.filter((id) => id !== filterId)
         : [...prev, filterId]
     )
   }
@@ -31,7 +41,7 @@ export default function JournalPage() {
     <div className="flex h-screen pt-16">
       {/* Sidebar */}
       <JournalSidebar />
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -47,9 +57,9 @@ export default function JournalPage() {
                   Express your thoughts naturally through conversation
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-4">
-                <div className="relative">
+                {/* <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
@@ -58,7 +68,7 @@ export default function JournalPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors w-[220px]"
                   />
-                </div>                
+                </div>                 */}
                 <div className="flex bg-white/5 rounded-lg p-1">
                   <button
                     onClick={() => setActiveView('conversation')}
@@ -71,7 +81,7 @@ export default function JournalPage() {
                     <Mic className="h-4 w-4 inline mr-2" />
                     Voice
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => setActiveView('entries')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                       activeView === 'entries'
@@ -81,14 +91,14 @@ export default function JournalPage() {
                   >
                     <Calendar className="h-4 w-4 inline mr-2" />
                     Entries
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
-            
+
             {/* Search filters - only visible when in entries view */}
             {activeView === 'entries' && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -97,7 +107,7 @@ export default function JournalPage() {
                 <div className="flex items-center gap-3">
                   <Filter className="h-4 w-4 text-gray-400" />
                   <div className="flex flex-wrap gap-2">
-                    {filters.map(filter => (
+                    {filters.map((filter) => (
                       <button
                         key={filter.id}
                         onClick={() => toggleFilter(filter.id)}
@@ -113,7 +123,7 @@ export default function JournalPage() {
                         )}
                       </button>
                     ))}
-                    
+
                     {activeFilters.length > 0 && (
                       <button
                         onClick={() => setActiveFilters([])}
@@ -128,7 +138,7 @@ export default function JournalPage() {
             )}
           </div>
         </div>
-        
+
         {/* Content Area */}
         <div className="flex-1 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-950 to-black">
           <motion.div
@@ -146,7 +156,10 @@ export default function JournalPage() {
                 </div>
               </div>
             ) : (
-              <JournalEntries searchQuery={searchQuery} filters={activeFilters} />
+              <JournalEntries
+                searchQuery={searchQuery}
+                filters={activeFilters}
+              />
             )}
           </motion.div>
         </div>

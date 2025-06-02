@@ -8,8 +8,7 @@ import {
   MicOff,
   Loader2,
   Volume2,
-  MessageCircle,
-  BarChart3,
+  MessageCircle
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -126,8 +125,8 @@ export function Conversation() {
   }, [conversation])
 
   return (
-    <div className="flex flex-col items-center gap-6 max-w-4xl mx-auto">
-      <div className="text-center space-y-2">
+    <div className="flex flex-col items-center gap-4 w-full px-4 mx-auto" style={{ maxWidth: '700px' }}>
+      <div className="text-center space-y-1">
         <h2 className="text-3xl font-bricolage font-bold">
           {status === 'connected' ? 'Listening...' : 'Ready to Start'}
         </h2>
@@ -188,18 +187,21 @@ export function Conversation() {
         </motion.div>
       )}
 
-      <div className="w-full mt-8">
-        <div className="flex items-center gap-2 mb-4">
-          <MessageCircle className="h-5 w-5 text-gray-400" />
+      <div className="w-full mt-5">
+        <div className="flex items-center space-x-2 mb-1">
+          <MessageCircle className="h-5 w-5 text-indigo-400" />
           <h3 className="text-lg font-semibold">Conversation</h3>
         </div>
 
-        <div className="bg-black/30 rounded-xl border border-white/10 p-6 max-h-[400px] overflow-y-auto space-y-4">
+        <div className="bg-black/40 rounded-xl border-2 border-indigo-500/20 p-3 h-[270px] overflow-y-auto space-y-3 shadow-lg shadow-indigo-500/10">
           <AnimatePresence>
             {messages.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">
-                Your conversation will appear here...
-              </p>
+              <div className="flex flex-col items-center justify-center h-full text-center gap-2">
+                <MessageCircle className="h-8 w-8 text-indigo-400/50" />
+                <p className="text-gray-400">
+                  Your conversation will appear here...
+                </p>
+              </div>
             ) : (
               messages.map((msg, idx) => (
                 <motion.div

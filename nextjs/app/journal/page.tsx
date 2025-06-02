@@ -1,25 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Conversation } from '../components/conversation'
 import { JournalSidebar } from '@/components/journal-sidebar'
 import { JournalEntries } from '@/components/journal-entries'
 import { motion } from 'framer-motion'
 import {
   BookOpen,
-  Mic,
-  Calendar,
-  Target,
-  Search,
   Filter,
   X,
 } from 'lucide-react'
 
 export default function JournalPage() {
-  const [activeView, setActiveView] = useState<'conversation' | 'entries'>(
-    'conversation'
-  )
-  const [searchQuery, setSearchQuery] = useState('')
+  // Using only conversation view as entries view is not currently needed
+  const [activeView] = useState<'conversation' | 'entries'>('conversation')
   const [activeFilters, setActiveFilters] = useState<string[]>([])
 
   const filters = [
@@ -38,15 +32,15 @@ export default function JournalPage() {
   }
 
   return (
-    <div className="flex h-screen pt-16">
+    <div className="flex h-screen pt-14">
       {/* Sidebar */}
       <JournalSidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="border-b border-white/10 bg-black/50 backdrop-blur-xl">
-          <div className="px-6 py-4">
+        <div className="border-b border-white/10 bg-black/50 backdrop-blur-xl py-1">
+          <div className="px-6 py-2">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bricolage font-bold flex items-center gap-2">
@@ -57,43 +51,8 @@ export default function JournalPage() {
                   Express your thoughts naturally through conversation
                 </p>
               </div>
-
-              <div className="flex items-center gap-4">
-                {/* <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search entries..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-indigo-500 transition-colors w-[220px]"
-                  />
-                </div>                 */}
-                <div className="flex bg-white/5 rounded-lg p-1">
-                  <button
-                    onClick={() => setActiveView('conversation')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      activeView === 'conversation'
-                        ? 'bg-indigo-500 text-white'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Mic className="h-4 w-4 inline mr-2" />
-                    Voice
-                  </button>
-                  {/* <button
-                    onClick={() => setActiveView('entries')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      activeView === 'entries'
-                        ? 'bg-indigo-500 text-white'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Calendar className="h-4 w-4 inline mr-2" />
-                    Entries
-                  </button> */}
-                </div>
-              </div>
+              
+              {/* Voice button removed as requested */}
             </div>
 
             {/* Search filters - only visible when in entries view */}
@@ -147,17 +106,17 @@ export default function JournalPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="h-full"
+            className="h-full overflow-y-auto"
           >
             {activeView === 'conversation' ? (
-              <div className="h-full flex items-center justify-center p-8">
-                <div className="max-w-4xl w-full">
+              <div className="min-h-full flex items-center justify-center py-4 px-4">
+                <div className="w-full" style={{ maxWidth: '700px' }}>
                   <Conversation />
                 </div>
               </div>
             ) : (
               <JournalEntries
-                searchQuery={searchQuery}
+                searchQuery=""
                 filters={activeFilters}
               />
             )}

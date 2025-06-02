@@ -13,6 +13,39 @@ export default function DailySummary({ date }: { date: string }) {
     setLoading(true);
     setError(null);
     
+    // Check if date is in the future
+    const selectedDate = new Date(date);
+    const today = new Date();
+    const isFutureDate = selectedDate > today;
+    
+    if (isFutureDate) {
+      // Use mock data for future dates to avoid API errors
+      setTimeout(() => {
+        const mockSummary = `**Daily Summary**
+
+This is a preview of how your summary will look. No real data is available for future dates.
+
+**Key Topics**
+• Productivity planning
+• Goal setting
+• Personal reflection
+
+**Insights**
+• Breaking down large tasks makes them more manageable
+• Regular journaling helps track progress over time
+
+**Emotions**
+• Motivated to accomplish goals
+• Calm and reflective mood`;
+        
+        setSummary(mockSummary);
+        setLoading(false);
+      }, 800); // Simulate loading
+      
+      return;
+    }
+    
+    // Normal fetch for past/current dates
     fetch(`/api/daily-summary?date=${date}`)
       .then(async (res) => {
         const data = await res.json();
@@ -30,7 +63,8 @@ export default function DailySummary({ date }: { date: string }) {
       })
       .catch((err) => {
         console.error('Summary error:', err);
-        setError(err.message);
+        // Use a more user-friendly error message
+        setSummary('**Note**\n\nUnable to load summary for this date. The summary service is currently unavailable.');
         setLoading(false);
       });
   }, [date]);

@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Target, TrendingUp, Clock, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { Target, TrendingUp, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
 const recentEntries = [
-  { id: 1, date: 'Jun 1', title: 'Morning Reflection', mood: '😊' },
-  { id: 2, date: 'May 31', title: 'Goal Progress Update', mood: '🎯' },
-  { id: 3, date: 'May 30', title: 'Evening Thoughts', mood: '🤔' },
-  { id: 4, date: 'May 29', title: 'Gratitude Practice', mood: '🙏' },
+  { id: 1, date: 'Jun 1', title: 'Morning Reflection', mood: '😊', dateParam: '2025-06-01' },
+  { id: 2, date: 'May 31', title: 'Goal Progress Update', mood: '🎯', dateParam: '2025-05-31' },
+  { id: 3, date: 'May 30', title: 'Evening Thoughts', mood: '🤔', dateParam: '2025-05-30' },
+  { id: 4, date: 'May 29', title: 'Gratitude Practice', mood: '🙏', dateParam: '2025-05-29' },
 ]
 
 const goals = [
@@ -20,6 +21,7 @@ const goals = [
 
 export function JournalSidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const router = useRouter()
 
   const getProgressColor = (progress: number) => {
     if (progress >= 75) return 'bg-green-500';
@@ -56,6 +58,7 @@ export function JournalSidebar() {
                   <button
                     key={entry.id}
                     className="w-full text-left p-3 rounded-lg hover:bg-white/5 transition-colors group"
+                    onClick={() => router.push(`/dashboard?date=${entry.dateParam}`)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

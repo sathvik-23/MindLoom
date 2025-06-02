@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import DailyLogs from '@/components/DailyLogs'
 import DailySummary from '@/components/DailySummary'
@@ -8,7 +8,8 @@ import { motion } from 'framer-motion'
 import { Calendar, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react'
 import { BackgroundWaves } from '@/components/background-waves'
 
-export default function Dashboard() {
+// Component to handle the search params logic
+function DashboardContent() {
   const searchParams = useSearchParams()
   const today = new Date()
   const todayStr = today.toISOString().split('T')[0]
@@ -119,5 +120,14 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Main Dashboard component wrapped with Suspense
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-pulse text-indigo-400">Loading...</div></div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }

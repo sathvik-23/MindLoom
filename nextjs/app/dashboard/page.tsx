@@ -99,21 +99,53 @@ function DashboardContent() {
           </motion.div>
 
           <div className="grid grid-cols-1 gap-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ height: '600px' }}>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
+                className="h-full"
               >
-                <DailyLogs date={selectedDate} />
+                <Suspense fallback={
+                  <div className="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm h-full flex flex-col">
+                    <div className="p-6 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-indigo-400/30 animate-pulse"></div>
+                        <div className="h-6 w-36 bg-white/10 rounded-md animate-pulse"></div>
+                      </div>
+                      <div className="h-4 w-48 bg-white/5 rounded-md mt-2 animate-pulse"></div>
+                    </div>
+                    <div className="flex-1 p-6 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-full border-2 border-indigo-400/50 border-t-transparent animate-spin"></div>
+                    </div>
+                  </div>
+                }>
+                  <DailyLogs date={selectedDate} />
+                </Suspense>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
+                className="h-full"
               >
-                <DailySummary date={selectedDate} />
+                <Suspense fallback={
+                  <div className="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm h-full flex flex-col">
+                    <div className="p-6 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-purple-400/30 animate-pulse"></div>
+                        <div className="h-6 w-36 bg-white/10 rounded-md animate-pulse"></div>
+                      </div>
+                      <div className="h-4 w-48 bg-white/5 rounded-md mt-2 animate-pulse"></div>
+                    </div>
+                    <div className="flex-1 p-6 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-full border-2 border-purple-400/50 border-t-transparent animate-spin"></div>
+                    </div>
+                  </div>
+                }>
+                  <DailySummary date={selectedDate} />
+                </Suspense>
               </motion.div>
             </div>
           </div>

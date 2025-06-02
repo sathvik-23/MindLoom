@@ -112,8 +112,9 @@ export default function DailyLogs({ date }: { date: string }) {
   };
 
   return (
-    <div className="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm">
-      <div className="p-6 border-b border-white/10">
+    <div className="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm h-full flex flex-col" style={{ height: '550px' }}>
+      {/* Header - Not scrollable */}
+      <div className="p-6 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-indigo-400" />
           <h2 className="text-xl font-bricolage font-bold">Daily Conversations</h2>
@@ -121,9 +122,10 @@ export default function DailyLogs({ date }: { date: string }) {
         <p className="text-sm text-gray-400 mt-1">Your voice journal entries for {date}</p>
       </div>
 
-      <div className="p-6 max-h-[600px] overflow-y-auto">
+      {/* Content container - Scrollable */}
+      <div className="p-6 overflow-y-auto flex-1">
         {loading && (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
           </div>
         )}

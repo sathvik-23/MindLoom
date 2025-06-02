@@ -1,19 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Target } from 'lucide-react'
 import { motion } from 'framer-motion'
-import GoalTracker from '@/components/GoalTracker'
 
 export default function GoalsPage() {
-  const [today, setToday] = useState<string>('')
-
-  useEffect(() => {
-    const now = new Date()
-    setToday(now.toISOString().split('T')[0])
-  }, [])
-
-  if (!today) return null // prevent hydration mismatch
 
   return (
     <div className="min-h-screen pt-20 px-4 sm:px-6 lg:px-8">
@@ -34,24 +23,15 @@ export default function GoalsPage() {
             {/* Main gradient title */}
             <h1 className="font-bricolage text-4xl sm:text-5xl font-bold mb-4">
               <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                Your Goal Journey
+                Coming Soon
               </span>
             </h1>
 
             {/* Description */}
             <p className="text-xl text-gray-300">
-              Track your progress and achieve your dreams
+              We&apos;re working on something amazing!
             </p>
           </div>
-
-          {/* Goal Tracker Component */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <GoalTracker date={today} />
-          </motion.div>
         </motion.div>
       </div>
     </div>

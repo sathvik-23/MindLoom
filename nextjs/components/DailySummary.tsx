@@ -1,17 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Loader2, AlertCircle, Brain } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, Brain, RefreshCw } from 'lucide-react';
+
+type SummarySection = {
+  type: string;
+  content: string;
+};
 
 export default function DailySummary({ date }: { date: string }) {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [fromDatabase, setFromDatabase] = useState(false);
 
-  useEffect(() => {
+  const fetchSummary = useCallback((regenerate = false) => {
     setLoading(true);
     setError(null);
+    if (regenerate) setRegenerating(true);
     
     // Check if date is in the future
     const selectedDate = new Date(date);
@@ -40,13 +48,19 @@ This is a preview of how your summary will look. No real data is available for f
         
         setSummary(mockSummary);
         setLoading(false);
+        setRegenerating(false);
+        setFromDatabase(false);
       }, 800); // Simulate loading
       
       return;
     }
     
     // Normal fetch for past/current dates
-    fetch(`/api/daily-summary?date=${date}`)
+    const url = regenerate 
+      ? `/api/daily-summary?date=${date}&regenerate=true`
+      : `/api/daily-summary?date=${date}`;
+      
+    fetch(url)
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
@@ -56,21 +70,33 @@ This is a preview of how your summary will look. No real data is available for f
       })
       .then((data) => {
         setSummary(data.summary || 'No summary available');
+        setFromDatabase(!!data.fromDatabase);
         if (data.error) {
           console.warn('Summary warning:', data.error);
         }
         setLoading(false);
+        setRegenerating(false);
       })
-      .catch((err) => {
-        console.error('Summary error:', err);
+      .catch((error) => {
+        console.error('Summary error:', error);
         // Use a more user-friendly error message
         setSummary('**Note**\n\nUnable to load summary for this date. The summary service is currently unavailable.');
         setLoading(false);
+        setRegenerating(false);
+        setFromDatabase(false);
       });
   }, [date]);
+  
+  useEffect(() => {
+    fetchSummary();
+  }, [date, fetchSummary]);
+  
+  const handleRegenerate = () => {
+    fetchSummary(true);
+  };
 
   // Parse summary into sections if it contains markdown-like formatting
-  const parseSummary = (text: string) => {
+  const parseSummary = (text: string): SummarySection[] => {
     const sections = text.split(/\*\*([^*]+)\*\*/g);
     return sections.map((section, index) => {
       if (index % 2 === 1) {
@@ -81,29 +107,41 @@ This is a preview of how your summary will look. No real data is available for f
         return { type: 'content', content: section.trim() };
       }
       return null;
-    }).filter(Boolean);
+    }).filter((item): item is SummarySection => item !== null);
   };
 
   const sections = parseSummary(summary);
 
   return (
-    <div className="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm">
-      <div className="p-6 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-purple-400" />
-          <h2 className="text-xl font-bricolage font-bold">AI Summary</h2>
+    <div className="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm h-full flex flex-col" style={{ height: '550px' }}>
+      {/* Header - Not scrollable */}
+      <div className="p-6 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-purple-400" />
+            <h2 className="text-xl font-bricolage font-bold">AI Summary</h2>
+          </div>
+          {fromDatabase && !loading && !error && (
+            <div className="text-xs text-gray-500 flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-green-400 opacity-75"></span>
+              Cached
+            </div>
+          )}
         </div>
         <p className="text-sm text-gray-400 mt-1">AI-generated summary for {date}</p>
       </div>
 
-      <div className="p-6">
+      {/* Content container - Scrollable */}
+      <div className="p-6 overflow-y-auto flex-1">
         {loading && (
-          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <div className="flex flex-col items-center justify-center h-full space-y-4">
             <div className="relative">
               <Loader2 className="h-8 w-8 text-purple-400 animate-spin" />
               <Sparkles className="h-4 w-4 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
             </div>
-            <p className="text-gray-400 text-sm">Analyzing your conversations...</p>
+            <p className="text-gray-400 text-sm">
+              {regenerating ? 'Regenerating summary...' : 'Analyzing your conversations...'}
+            </p>
           </div>
         )}
 
@@ -129,7 +167,7 @@ This is a preview of how your summary will look. No real data is available for f
             className="space-y-6"
           >
             {sections.length > 0 ? (
-              sections.map((section: any, index: number) => (
+              sections.map((section: { type: string; content: string }, index: number) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
@@ -164,6 +202,18 @@ This is a preview of how your summary will look. No real data is available for f
                 <p className="text-gray-300 leading-relaxed">{summary}</p>
               </div>
             )}
+            
+            {/* Regenerate button */}
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                className="flex items-center gap-2 px-4 py-2 rounded-md text-sm bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-4 w-4 ${regenerating ? 'animate-spin' : ''}`} />
+                {regenerating ? 'Regenerating...' : 'Generate New Summary'}
+              </button>
+            </div>
           </motion.div>
         )}
       </div>

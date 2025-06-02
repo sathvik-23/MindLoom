@@ -7,8 +7,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const date = searchParams.get('date');
+  const regenerate = searchParams.get('regenerate') === 'true';
 
-  console.log('Daily summary requested for date:', date);
+  console.log('Daily summary requested for date:', date, regenerate ? '(regenerating)' : '');
 
   if (!date) {
     return NextResponse.json({ error: 'Date parameter is required' }, { status: 400 });
@@ -19,6 +20,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
   }
 
+  // If not regenerating, check if we already have a summary for this date in the database
+  if (!regenerate) {
+    const { data: existingSummary, error: existingError } = await supabase
+      .from('daily_summaries')
+      .select('summary')
+      .eq('date', date)
+      .single();
+
+    if (existingSummary && !existingError) {
+      console.log('Retrieved existing summary from database');
+      return NextResponse.json({ summary: existingSummary.summary, fromDatabase: true });
+    }
+  }
+
+  // We need to generate a new summary
   const startDate = new Date(date);
   const endDate = new Date(date);
   endDate.setDate(endDate.getDate() + 1);
@@ -38,7 +54,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (!transcripts || transcripts.length === 0) {
-    return NextResponse.json({ summary: 'No conversations found for this date.' });
+    const noConversationMsg = 'No conversations found for this date.';
+    return NextResponse.json({ summary: noConversationMsg });
   }
 
   const messages = transcripts.map((t) => {
@@ -78,11 +95,28 @@ export async function GET(request: NextRequest) {
     const response = result.response;
     const summary = response.text();
     
-    return NextResponse.json({ summary });
-  } catch (err: any) {
+    // Store the summary in the database
+    const { error: upsertError } = await supabase
+      .from('daily_summaries')
+      .upsert({
+        date,
+        summary
+      });
+
+    if (upsertError) {
+      console.error('Error storing summary in database:', upsertError);
+    } else {
+      console.log('Summary stored in database for date:', date);
+    }
+    
+    return NextResponse.json({ summary, generated: true });
+  } catch (err: unknown) {
     console.error('Error generating summary:', err);
-    console.error('Error details:', err.message);
-    console.error('Error stack:', err.stack);
+    
+    if (err instanceof Error) {
+      console.error('Error details:', err.message);
+      console.error('Error stack:', err.stack);
+    }
     
     // Return a basic summary if Gemini fails
     const basicSummary = `**Conversation Overview**

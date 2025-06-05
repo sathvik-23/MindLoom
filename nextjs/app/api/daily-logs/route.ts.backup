@@ -1,0 +1,96 @@
+// app/api/daily-logs/route.ts
+import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+
+// Create a direct Supabase client for server-side use
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const date = searchParams.get('date');
+  const userId = searchParams.get('userId');
+
+  // Add debug logs
+  console.log("Daily logs API called with:");
+  console.log("- Date:", date);
+  console.log("- User ID:", userId);
+
+  if (!date) {
+    return NextResponse.json({ error: 'Date parameter is required' }, { status: 400 });
+  }
+
+  // Construct date range for the query
+  const startDate = new Date(date);
+  startDate.setHours(0, 0, 0, 0);
+  
+  const endDate = new Date(date);
+  endDate.setHours(23, 59, 59, 999);
+  
+  console.log("- Date range:", startDate.toISOString(), "to", endDate.toISOString());
+
+  try {
+    // First let's try to get data without user filtering to see if there's any data at all
+    const { data: allData, error: allDataError } = await supabase
+      .from('transcripts')
+      .select('*')
+      .order('created_at', { ascending: true });
+    
+    console.log("- Total transcripts in database:", allData?.length || 0);
+    
+    if (allDataError) {
+      console.error("- Query error (all data):", allDataError.message);
+    }
+    
+    // Now try with date filtering but no user filtering
+    const { data: dateData, error: dateDataError } = await supabase
+      .from('transcripts')
+      .select('*')
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString())
+      .order('created_at', { ascending: true });
+    
+    console.log("- Transcripts for date range (all users):", dateData?.length || 0);
+    
+    if (dateDataError) {
+      console.error("- Query error (date filter):", dateDataError.message);
+    }
+
+    // Finally with both date and user filtering
+    let query = supabase
+      .from('transcripts')
+      .select('*');
+
+    // Try with both more permissive date range and exact user ID to debug
+    if (date) {
+      query = query
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+    }
+    
+    if (userId) {
+      query = query.eq('user_id', userId);
+      console.log("- Filtering by user_id:", userId);
+    }
+    
+    // Execute the query with ordering
+    const { data, error } = await query.order('created_at', { ascending: true });
+
+    if (error) {
+      console.error("- Query error (with filters):", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    console.log("- Returned logs count:", data?.length || 0);
+    if (data && data.length > 0) {
+      console.log("- Sample log:", data[0]);
+    }
+    
+    return NextResponse.json(data || []);
+  } catch (err) {
+    console.error("- Unexpected error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

@@ -28,10 +28,18 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
   const parseMessage = (message: string) => {
     try {
       const parsed = JSON.parse(message);
+      // Handle different JSON structures found in the data
       if (parsed.message) return parsed.message;
       if (parsed.text) return parsed.text;
+      if (parsed.content) return parsed.content;
+      // If it's just a plain object with source and message
+      if (typeof parsed === 'object' && parsed.source && parsed.message) {
+        return parsed.message;
+      }
+      // If parsing succeeded but structure is unknown, return original
       return message;
     } catch {
+      // If it's not JSON, return as-is
       return message;
     }
   };
@@ -41,11 +49,18 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
     setError(null);
     
     console.log("DailyLogs component is fetching data with:", { date, userId });
+    console.log("Current date:", new Date().toISOString());
     
     // Check if date is in the future
     const selectedDate = new Date(date);
     const today = new Date();
     const isFutureDate = selectedDate > today;
+    
+    console.log("Date comparison:", {
+      selectedDate: selectedDate.toISOString(),
+      today: today.toISOString(),
+      isFutureDate
+    });
     
     if (isFutureDate) {
       // Use mock data for future dates to avoid API errors

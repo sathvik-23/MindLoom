@@ -13,7 +13,12 @@ interface Transcript {
   created_at: string;
 }
 
-export default function DailyLogs({ date }: { date: string }) {
+interface DailyLogsProps {
+  date: string;
+  userId?: string;  // userId is now optional to maintain backward compatibility
+}
+
+export default function DailyLogs({ date, userId }: DailyLogsProps) {
   const [logs, setLogs] = useState<Transcript[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,8 +85,13 @@ export default function DailyLogs({ date }: { date: string }) {
       return;
     }
     
+    // Add user_id to the API call if it exists
+    const apiUrl = userId 
+      ? `/api/daily-logs?date=${date}&userId=${userId}`
+      : `/api/daily-logs?date=${date}`;
+    
     // Normal fetch for past/current dates
-    fetch(`/api/daily-logs?date=${date}`)
+    fetch(apiUrl)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch logs');
         return res.json();
@@ -101,7 +111,7 @@ export default function DailyLogs({ date }: { date: string }) {
         setLogs([]);
         setLoading(false);
       });
-  }, [date]);
+  }, [date, userId]);
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('en-US', {

@@ -9,7 +9,12 @@ type SummarySection = {
   content: string;
 };
 
-export default function DailySummary({ date }: { date: string }) {
+interface DailySummaryProps {
+  date: string;
+  userId?: string;  // userId is now optional to maintain backward compatibility
+}
+
+export default function DailySummary({ date, userId }: DailySummaryProps) {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,11 +60,17 @@ This is a preview of how your summary will look. No real data is available for f
       return;
     }
     
-    // Normal fetch for past/current dates
-    const url = regenerate 
+    // Add user_id to the API call if it exists
+    let url = regenerate 
       ? `/api/daily-summary?date=${date}&regenerate=true`
       : `/api/daily-summary?date=${date}`;
       
+    // Add userId parameter if provided
+    if (userId) {
+      url += `&userId=${userId}`;
+    }
+    
+    // Normal fetch for past/current dates
     fetch(url)
       .then(async (res) => {
         const data = await res.json();
@@ -85,11 +96,11 @@ This is a preview of how your summary will look. No real data is available for f
         setRegenerating(false);
         setFromDatabase(false);
       });
-  }, [date]);
+  }, [date, userId]);
   
   useEffect(() => {
     fetchSummary();
-  }, [date, fetchSummary]);
+  }, [date, userId, fetchSummary]);
   
   const handleRegenerate = () => {
     fetchSummary(true);

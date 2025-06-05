@@ -1,21 +1,43 @@
 'use client'
 
-import { useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, Suspense, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import DailyLogs from '@/components/DailyLogs'
 import DailySummary from '@/components/DailySummary'
 import { motion } from 'framer-motion'
-import { Calendar, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, BarChart3, Loader2 } from 'lucide-react'
 import { BackgroundWaves } from '@/components/background-waves'
+import { useAuth } from '@/app/context/AuthContext'
 
 // Component to handle the search params logic
 function DashboardContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const today = new Date()
   const todayStr = today.toISOString().split('T')[0]
+  const { user, loading: authLoading } = useAuth()
 
   const initialDate = searchParams.get('date') || todayStr
   const [selectedDate, setSelectedDate] = useState(initialDate)
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth/signin?redirectTo=/dashboard')
+    }
+  }, [user, authLoading, router])
+
+  // If still loading auth state or not authenticated, show loading
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+          <p className="text-gray-400">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   const changeDate = (days: number) => {
     const current = new Date(selectedDate)
@@ -58,6 +80,10 @@ function DashboardContent() {
                 Your Daily Journey
               </span>
             </h1>
+            
+            <p className="text-gray-300">
+              Welcome back, {user?.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+            </p>
           </motion.div>
 
           <motion.div
@@ -120,7 +146,7 @@ function DashboardContent() {
                     </div>
                   </div>
                 }>
-                  <DailyLogs date={selectedDate} />
+                  <DailyLogs date={selectedDate} userId={user.id} />
                 </Suspense>
               </motion.div>
 
@@ -144,7 +170,7 @@ function DashboardContent() {
                     </div>
                   </div>
                 }>
-                  <DailySummary date={selectedDate} />
+                  <DailySummary date={selectedDate} userId={user.id} />
                 </Suspense>
               </motion.div>
             </div>
@@ -158,7 +184,14 @@ function DashboardContent() {
 // Main Dashboard component wrapped with Suspense
 export default function Dashboard() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-pulse text-indigo-400">Loading...</div></div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    }>
       <DashboardContent />
     </Suspense>
   )

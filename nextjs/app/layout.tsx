@@ -3,6 +3,7 @@ import { Inter, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "./context/AuthContext";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -34,11 +35,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
       <body className="font-inter bg-gradient-to-br from-gray-900 via-gray-950 to-black text-white">
-        <Navigation />
-        <main className="min-h-screen">
-          {children}
-        </main>
-        <Toaster />
+        <AuthProvider>
+          <Navigation />
+          <main className="min-h-screen">
+            {children}
+          </main>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

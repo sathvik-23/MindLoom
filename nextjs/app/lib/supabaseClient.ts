@@ -1,6 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+// This file is kept for backward compatibility
+// New code should import from @/app/lib/supabase/client instead
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/app/lib/supabase/client';
+export { supabase };

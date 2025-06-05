@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Conversation } from '../components/conversation'
+import { Conversation } from '@/app/components/conversation'
 import { JournalSidebar } from '@/components/journal-sidebar'
 import { JournalEntries } from '@/components/journal-entries'
 import { motion } from 'framer-motion'

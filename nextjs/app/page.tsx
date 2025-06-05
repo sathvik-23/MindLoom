@@ -10,9 +10,13 @@ import {
   BarChart3,
   Sparkles,
   Zap,
+  LogIn,
+  UserPlus,
 } from 'lucide-react'
 import { BackgroundWaves } from '@/components/background-waves'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useAuth } from './context/AuthContext'
+import { useRouter } from 'next/navigation'
 
 const features = [
   {
@@ -45,13 +49,23 @@ const features = [
   },
 ]
 
-// Stats section removed
-
 export default function HomePage() {
-  // Initialize component
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [mounted, setMounted] = useState(false)
+  
+  // Handle hydration issues
   useEffect(() => {
-    // Component mounted
+    setMounted(true)
   }, [])
+  
+  // If not mounted yet, render nothing to avoid hydration mismatch
+  if (!mounted) {
+    return null
+  }
+  
+  const isAuthenticated = !!user
+  
   return (
     <div className="relative min-h-screen overflow-hidden">
       <BackgroundWaves />
@@ -92,29 +106,47 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  href="/journal"
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold hover:shadow-xl hover:shadow-indigo-500/25 transition-all duration-300"
+              {isAuthenticated ? (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Start Journaling
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  href="#features"
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all duration-300"
-                >
-                  Learn More
-                </Link>
-              </motion.div>
+                  <Link
+                    href="/journal"
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold hover:shadow-xl hover:shadow-indigo-500/25 transition-all duration-300"
+                  >
+                    Start Journaling
+                    <ArrowRight className="h-5 w-5" />
+                  </Link>
+                </motion.div>
+              ) : (
+                <>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      href="/auth/signin"
+                      className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold hover:shadow-xl hover:shadow-indigo-500/25 transition-all duration-300"
+                    >
+                      Sign In
+                      <LogIn className="h-5 w-5" />
+                    </Link>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      href="/auth/signup"
+                      className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all duration-300"
+                    >
+                      Sign Up
+                      <UserPlus className="h-5 w-5" />
+                    </Link>
+                  </motion.div>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
@@ -201,18 +233,33 @@ export default function HomePage() {
                 Join thousands who have transformed their lives through mindful
                 journaling.
               </p>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  href="/journal"
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-gray-900 font-semibold hover:shadow-xl hover:shadow-white/25 transition-all duration-300"
+              {isAuthenticated ? (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Get Started Free
-                  <Zap className="h-5 w-5" />
-                </Link>
-              </motion.div>
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-gray-900 font-semibold hover:shadow-xl hover:shadow-white/25 transition-all duration-300"
+                  >
+                    Go to Dashboard
+                    <Zap className="h-5 w-5" />
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link
+                    href="/auth/signup"
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-gray-900 font-semibold hover:shadow-xl hover:shadow-white/25 transition-all duration-300"
+                  >
+                    Get Started Free
+                    <Zap className="h-5 w-5" />
+                  </Link>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         </div>

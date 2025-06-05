@@ -1,8 +1,9 @@
 'use client'
 
 import { useConversation } from '@elevenlabs/react'
-import { useCallback, useRef, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { useCallback, useRef, useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase/client'
+import { useAuth } from '@/app/context/AuthContext'
 import {
   Mic,
   MicOff,
@@ -14,12 +15,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 export function Conversation() {
+  const { user, loading: authLoading } = useAuth()
   const [messages, setMessages] = useState<
     { text: string; role: 'user' | 'agent' }[]
   >([])
   const conversationIdRef = useRef<string | null>(null)
   const dbConversationUUIDRef = useRef<string | null>(null)
-  const userName = 'Sathvik'
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'
   const [status, setStatus] = useState<
     'disconnected' | 'connecting' | 'connected'
   >('disconnected')
@@ -34,6 +36,8 @@ export function Conversation() {
       setStatus('disconnected')
     },
     onMessage: async (message) => {
+      if (!user) return // Make sure user is authenticated
+      
       const text = message?.text || JSON.stringify(message)
       const role = message?.source === 'ai' ? 'agent' : 'user'
       setMessages((prev) => [...prev, { text, role }])
@@ -45,6 +49,7 @@ export function Conversation() {
           role,
           message: text,
           time_in_call_secs: message?.time_in_call_secs || null,
+          user_id: user.id  // Add user_id to meet RLS requirements
         },
       ])
     },
@@ -58,6 +63,8 @@ export function Conversation() {
   })
 
   const logUserMessage = async (text: string) => {
+    if (!user) return // Make sure user is authenticated
+    
     setMessages((prev) => [...prev, { text, role: 'user' }])
     if (!dbConversationUUIDRef.current) return
     await supabase.from('transcripts').insert([
@@ -66,6 +73,7 @@ export function Conversation() {
         role: 'user',
         message: text,
         time_in_call_secs: null,
+        user_id: user.id  // Add user_id to meet RLS requirements
       },
     ])
   }
@@ -78,6 +86,12 @@ export function Conversation() {
 
   const startConversation = useCallback(async () => {
     try {
+      // Check if user is authenticated
+      if (!user) {
+        console.error('User must be authenticated to start a conversation')
+        return
+      }
+      
       setStatus('connecting')
       await navigator.mediaDevices.getUserMedia({ audio: true })
       const signedUrl = await getSignedUrl()
@@ -96,12 +110,14 @@ export function Conversation() {
           conversation_id: conversationId,
           agent_name: 'MindAgent',
           status: 'started',
+          user_id: user.id  // Add user_id to meet RLS requirements
         },
       ])
       const { data } = await supabase
         .from('conversations')
         .select('id')
         .eq('conversation_id', conversationId)
+        .eq('user_id', user.id)  // Filter by user_id for RLS
         .single()
 
       dbConversationUUIDRef.current = data.id
@@ -110,7 +126,7 @@ export function Conversation() {
       console.error('❌ Error starting conversation:', error)
       setStatus('disconnected')
     }
-  }, [conversation])
+  }, [conversation, user, userName])
 
   const stopConversation = useCallback(async () => {
     try {
@@ -123,6 +139,28 @@ export function Conversation() {
       setStatus('disconnected')
     }
   }, [conversation])
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      window.location.href = '/auth/signin?redirectTo=/journal'
+    }
+  }, [user, authLoading])
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+        <p className="mt-4 text-gray-400">Loading...</p>
+      </div>
+    )
+  }
+
+  // Don't render anything if not authenticated
+  if (!user) {
+    return null
+  }
 
   return (
     <div className="flex flex-col items-center gap-4 w-full px-4 mx-auto" style={{ maxWidth: '700px' }}>
@@ -172,7 +210,7 @@ export function Conversation() {
 
       {/* Mic instruction banner */}
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm">
-        <span className="text-gray-200">Say “goodbye” to stop recording</span>
+        <span className="text-gray-200">Say "goodbye" to stop recording</span>
       </div>
 
       {conversation.isSpeaking && (

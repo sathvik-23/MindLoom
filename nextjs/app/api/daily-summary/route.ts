@@ -1,4 +1,4 @@
-import { supabase } from '@/app/lib/supabaseClient';
+import { supabase } from '@/app/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const date = searchParams.get('date');
   const regenerate = searchParams.get('regenerate') === 'true';
+  const userId = searchParams.get('userId');
 
   console.log('Daily summary requested for date:', date, regenerate ? '(regenerating)' : '');
 
@@ -22,11 +23,17 @@ export async function GET(request: NextRequest) {
 
   // If not regenerating, check if we already have a summary for this date in the database
   if (!regenerate) {
-    const { data: existingSummary, error: existingError } = await supabase
+    let query = supabase
       .from('daily_summaries')
       .select('summary')
-      .eq('date', date)
-      .single();
+      .eq('date', date);
+    
+    // Add user filtering if userId is provided
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+    
+    const { data: existingSummary, error: existingError } = await query.single();
 
     if (existingSummary && !existingError) {
       console.log('Retrieved existing summary from database');
@@ -39,12 +46,20 @@ export async function GET(request: NextRequest) {
   const endDate = new Date(date);
   endDate.setDate(endDate.getDate() + 1);
 
-  const { data: transcripts, error } = await supabase
+  // Build the query for transcripts
+  let transcriptsQuery = supabase
     .from('transcripts')
     .select('message, role')
     .gte('created_at', startDate.toISOString())
-    .lt('created_at', endDate.toISOString())
-    .order('created_at', { ascending: true });
+    .lt('created_at', endDate.toISOString());
+  
+  // Add user filtering if userId is provided
+  if (userId) {
+    transcriptsQuery = transcriptsQuery.eq('user_id', userId);
+  }
+  
+  // Execute the query with ordering
+  const { data: transcripts, error } = await transcriptsQuery.order('created_at', { ascending: true });
 
   console.log('Transcripts fetched:', transcripts?.length || 0);
 
@@ -95,13 +110,17 @@ export async function GET(request: NextRequest) {
     const response = result.response;
     const summary = response.text();
     
+    // Prepare the summary record
+    const summaryRecord = {
+      date,
+      summary,
+      ...(userId && { user_id: userId }) // Only add user_id if it exists
+    };
+    
     // Store the summary in the database
     const { error: upsertError } = await supabase
       .from('daily_summaries')
-      .upsert({
-        date,
-        summary
-      });
+      .upsert(summaryRecord);
 
     if (upsertError) {
       console.error('Error storing summary in database:', upsertError);

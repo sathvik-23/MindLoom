@@ -1,24 +1,43 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Menu, X, Brain, BookOpen, Target, BarChart3, Settings, Sparkles } from 'lucide-react'
+import { Menu, X, Brain, BookOpen, Target, BarChart3, Settings, Sparkles, User, LogOut, LogIn, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const navigation = [
-  { name: 'Home', href: '/', icon: Brain },
-  { name: 'Journal', href: '/journal', icon: BookOpen },
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Goals', href: '/goals', icon: Target },
-  { name: 'Insights', href: '/insights', icon: Sparkles },
-  { name: 'Settings', href: '/settings', icon: Settings },
-]
+import { useAuth } from '@/app/context/AuthContext'
 
 export function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, loading, signOut } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  
+  const isAuthenticated = !!user
+  
+  // Get navigation items based on auth state
+  const getNavItems = () => {
+    const baseItems = [
+      { name: 'Home', href: '/', icon: Brain },
+    ];
+    
+    // Only show these items to authenticated users
+    if (isAuthenticated) {
+      baseItems.push(
+        { name: 'Journal', href: '/journal', icon: BookOpen },
+        { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+        { name: 'Goals', href: '/goals', icon: Target },
+        { name: 'Insights', href: '/insights', icon: Sparkles },
+        { name: 'Settings', href: '/settings', icon: Settings }
+      );
+    }
+    
+    return baseItems;
+  };
+  
+  const navigation = getNavItems();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,6 +46,11 @@ export function Navigation() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+  
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   return (
     <nav className={cn(
@@ -47,7 +71,7 @@ export function Navigation() {
             </Link>
           </div>
           
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center">
             <div className="ml-10 flex items-baseline space-x-1">
               {navigation.map((item) => {
                 const Icon = item.icon
@@ -69,9 +93,80 @@ export function Navigation() {
                 )
               })}
             </div>
+            
+            {/* Auth buttons - desktop */}
+            <div className="ml-4 flex items-center">
+              {!loading && (
+                isAuthenticated ? (
+                  <div className="relative">
+                    <button 
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all"
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    >
+                      <User className="h-4 w-4" />
+                      <span>{user?.email?.split('@')[0]}</span>
+                    </button>
+                    
+                    {/* User dropdown menu */}
+                    {userMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-black/60 backdrop-blur-lg border border-white/10">
+                        <div className="py-1" role="menu">
+                          <Link 
+                            href="/profile" 
+                            className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            Profile
+                          </Link>
+                          <button
+                            className="flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white"
+                            onClick={() => {
+                              setUserMenuOpen(false)
+                              handleSignOut()
+                            }}
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Sign out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Link
+                      href="/auth/signin"
+                      className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      <span>Sign in</span>
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      <span>Sign up</span>
+                    </Link>
+                  </div>
+                )
+              )}
+            </div>
           </div>
           
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
+            {/* Mobile auth button */}
+            {!loading && !isAuthenticated && (
+              <Link
+                href="/auth/signin"
+                className="mr-2 flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
+              >
+                <LogIn className="h-3 w-3" />
+                <span>Sign in</span>
+              </Link>
+            )}
+            
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -108,8 +203,43 @@ export function Navigation() {
               </Link>
             )
           })}
+          
+          {/* Mobile auth items */}
+          {!loading && isAuthenticated && (
+            <>
+              <Link
+                href="/profile"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all"
+              >
+                <User className="h-5 w-5" />
+                <span>Profile</span>
+              </Link>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  handleSignOut();
+                }}
+                className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Sign out</span>
+              </button>
+            </>
+          )}
+          
+          {!loading && !isAuthenticated && (
+            <Link
+              href="/auth/signup"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium bg-indigo-600/30 text-white hover:bg-indigo-600/50 transition-all"
+            >
+              <UserPlus className="h-5 w-5" />
+              <span>Create Account</span>
+            </Link>
+          )}
         </div>
       </div>
     </nav>
-  )
+  );
 }

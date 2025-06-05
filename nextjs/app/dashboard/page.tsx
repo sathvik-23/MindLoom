@@ -20,6 +20,13 @@ function DashboardContent() {
   const initialDate = searchParams.get('date') || todayStr
   const [selectedDate, setSelectedDate] = useState(initialDate)
 
+  // Add debugging logs
+  useEffect(() => {
+    if (user) {
+      console.log("Dashboard: Authenticated user:", user.id);
+    }
+  }, [user]);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
@@ -146,6 +153,8 @@ function DashboardContent() {
                     </div>
                   </div>
                 }>
+                  {/* Log userId being passed for debugging */}
+                  {console.log("Rendering DailyLogs with userId:", user.id)}
                   <DailyLogs date={selectedDate} userId={user.id} />
                 </Suspense>
               </motion.div>

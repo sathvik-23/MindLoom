@@ -11,11 +11,12 @@ interface Transcript {
   role: string;
   message: string;
   created_at: string;
+  user_id?: string; // Make this optional to handle legacy data
 }
 
 interface DailyLogsProps {
   date: string;
-  userId?: string;  // userId is now optional to maintain backward compatibility
+  userId?: string;
 }
 
 export default function DailyLogs({ date, userId }: DailyLogsProps) {
@@ -39,6 +40,8 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
     setLoading(true);
     setError(null);
     
+    console.log("DailyLogs component is fetching data with:", { date, userId });
+    
     // Check if date is in the future
     const selectedDate = new Date(date);
     const today = new Date();
@@ -46,6 +49,7 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
     
     if (isFutureDate) {
       // Use mock data for future dates to avoid API errors
+      console.log("Using mock data for future date");
       setTimeout(() => {
         const mockLogs: Transcript[] = [
           {
@@ -90,24 +94,31 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
       ? `/api/daily-logs?date=${date}&userId=${userId}`
       : `/api/daily-logs?date=${date}`;
     
+    console.log("Fetching from API URL:", apiUrl);
+    
     // Normal fetch for past/current dates
     fetch(apiUrl)
       .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch logs');
+        if (!res.ok) {
+          console.error("API response not OK:", res.status, res.statusText);
+          throw new Error(`Failed to fetch logs: ${res.status} ${res.statusText}`);
+        }
         return res.json();
       })
       .then((data) => {
+        console.log("API returned data:", data);
         // Clean up the messages
         const cleanedLogs = (data || []).map((log: Transcript) => ({
           ...log,
           message: parseMessage(log.message)
         }));
+        console.log("Cleaned logs:", cleanedLogs);
         setLogs(cleanedLogs);
         setLoading(false);
       })
       .catch((err) => {
         console.error('Error fetching logs:', err);
-        // Don't show error UI, just show empty state
+        setError(err.message || "Failed to fetch conversation logs");
         setLogs([]);
         setLoading(false);
       });
@@ -158,7 +169,7 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
             <div className="space-y-4">
               {logs.map((log, idx) => (
                 <motion.div
-                  key={log.id}
+                  key={log.id || idx}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
@@ -166,7 +177,8 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
                     'flex',
                     log.role === 'user' ? 'justify-end' : 'justify-start'
                   )}
-                >                  <div
+                >
+                  <div
                     className={cn(
                       'max-w-[80%] px-4 py-3 rounded-2xl',
                       log.role === 'user'

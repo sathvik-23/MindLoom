@@ -50,6 +50,7 @@ export default function DailyLogs({ date, userId }: DailyLogsProps) {
     
     console.log("DailyLogs component is fetching data with:", { date, userId });
     console.log("Current date:", new Date().toISOString());
+    console.log("Environment:", typeof window !== 'undefined' ? 'client' : 'server');
     
     // Check if date is in the future
     const selectedDate = new Date(date);

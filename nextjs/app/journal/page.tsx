@@ -1,18 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Conversation } from '@/app/components/conversation'
 import { JournalSidebar } from '@/components/journal-sidebar'
 import { JournalEntries } from '@/components/journal-entries'
-import { AuthGuard } from '@/components/AuthGuard'
+import { useAuth } from '@/app/context/AuthContext'
 import { motion } from 'framer-motion'
 import {
   BookOpen,
   Filter,
   X,
+  Loader2,
+  Lock
 } from 'lucide-react'
 
 export default function JournalPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  
   // Using only conversation view as entries view is not currently needed
   const [activeView] = useState<'conversation' | 'entries'>('conversation')
   const [activeFilters, setActiveFilters] = useState<string[]>([])
@@ -32,14 +38,55 @@ export default function JournalPage() {
     )
   }
 
-  return (
-    <AuthGuard redirectTo="/journal">
-      <div className="flex h-screen pt-14">
-        {/* Sidebar */}
-        <JournalSidebar />
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/signin?redirectTo=/journal')
+    }
+  }, [user, loading, router])
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+        <p className="mt-4 text-gray-400">Loading...</p>
+      </div>
+    )
+  }
+
+  // Show authentication required message if not authenticated
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-6">
+        <div className="p-8 rounded-full bg-red-500/20 border border-red-500/30">
+          <Lock className="h-12 w-12 text-red-400" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="text-2xl font-bold text-red-400">Authentication Required</h3>
+          <p className="text-gray-400 max-w-md">
+            Please sign in to access the voice journal feature. Your conversations are private and secure.
+          </p>
+        </div>
+        <motion.button
+          onClick={() => router.push('/auth/signin?redirectTo=/journal')}
+          className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Sign In to Continue
+        </motion.button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-screen pt-14">
+      {/* Sidebar */}
+      <JournalSidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="border-b border-white/10 bg-black/50 backdrop-blur-xl py-1">
           <div className="px-6 py-2">
@@ -125,6 +172,6 @@ export default function JournalPage() {
           </motion.div>
         </div>
       </div>
-    </AuthGuard>
+    </div>
   )
 }

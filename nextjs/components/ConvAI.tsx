@@ -5,7 +5,10 @@ import * as React from "react";
 import { useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useConversation } from "@11labs/react";
+import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Lock, Loader2 } from "lucide-react";
 
 async function requestMicrophonePermission() {
   try {
@@ -27,6 +30,9 @@ async function getSignedUrl(): Promise<string> {
 }
 
 export function ConvAI() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  
   const conversation = useConversation({
     onConnect: () => {
       console.log("connected");
@@ -44,9 +50,15 @@ export function ConvAI() {
   });
 
   async function startConversation() {
+    // Check authentication first
+    if (!user) {
+      router.push('/auth/signin?redirectTo=/journal');
+      return;
+    }
+
     const hasPermission = await requestMicrophonePermission();
     if (!hasPermission) {
-      alert("No permission");
+      alert("Microphone permission is required for voice conversations");
       return;
     }
     const signedUrl = await getSignedUrl();
@@ -57,6 +69,53 @@ export function ConvAI() {
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
   }, [conversation]);
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center gap-x-4">
+        <Card className="rounded-3xl">
+          <CardContent>
+            <div className="flex flex-col items-center justify-center p-8">
+              <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+              <p className="mt-4 text-gray-400">Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show authentication required message for non-authenticated users
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center gap-x-4">
+        <Card className="rounded-3xl">
+          <CardContent>
+            <CardHeader>
+              <CardTitle className="text-center flex items-center justify-center gap-2">
+                <Lock className="h-5 w-5 text-red-400" />
+                Authentication Required
+              </CardTitle>
+            </CardHeader>
+            <div className="flex flex-col gap-y-4 text-center">
+              <p className="text-gray-400 max-w-sm">
+                Please sign in to access voice conversations. Your conversations are private and secure.
+              </p>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                size="lg"
+                onClick={() => router.push('/auth/signin?redirectTo=/journal')}
+              >
+                Sign In to Continue
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className={"flex justify-center items-center gap-x-4"}>

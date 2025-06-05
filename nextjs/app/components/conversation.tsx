@@ -4,18 +4,22 @@ import { useConversation } from '@elevenlabs/react'
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase/client'
 import { useAuth } from '@/app/context/AuthContext'
+import { useRouter } from 'next/navigation'
 import {
   Mic,
   MicOff,
   Loader2,
   Volume2,
-  MessageCircle
+  MessageCircle,
+  Lock,
+  UserX
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 export function Conversation() {
   const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [messages, setMessages] = useState<
     { text: string; role: 'user' | 'agent' }[]
   >([])
@@ -25,6 +29,7 @@ export function Conversation() {
   const [status, setStatus] = useState<
     'disconnected' | 'connecting' | 'connected'
   >('disconnected')
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const conversation = useConversation({
     onConnect: () => {
@@ -85,14 +90,17 @@ export function Conversation() {
   }
 
   const startConversation = useCallback(async () => {
+    // First check authentication
+    if (!user) {
+      setAuthError('Please sign in to use the voice journal feature')
+      router.push('/auth/signin?redirectTo=/journal')
+      return
+    }
+
     try {
-      // Check if user is authenticated
-      if (!user) {
-        console.error('User must be authenticated to start a conversation')
-        return
-      }
-      
       setStatus('connecting')
+      setAuthError(null)
+      
       await navigator.mediaDevices.getUserMedia({ audio: true })
       const signedUrl = await getSignedUrl()
 
@@ -125,8 +133,14 @@ export function Conversation() {
     } catch (error) {
       console.error('❌ Error starting conversation:', error)
       setStatus('disconnected')
+      
+      // Handle specific authentication errors
+      if (error.message?.includes('auth') || error.message?.includes('permission')) {
+        setAuthError('Authentication required. Please sign in to continue.')
+        router.push('/auth/signin?redirectTo=/journal')
+      }
     }
-  }, [conversation, user, userName])
+  }, [conversation, user, userName, router])
 
   const stopConversation = useCallback(async () => {
     try {
@@ -140,12 +154,30 @@ export function Conversation() {
     }
   }, [conversation])
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      window.location.href = '/auth/signin?redirectTo=/journal'
-    }
-  }, [user, authLoading])
+  // Show authentication error if user is not authenticated
+  if (!authLoading && !user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 gap-6">
+        <div className="p-8 rounded-full bg-red-500/20 border border-red-500/30">
+          <Lock className="h-12 w-12 text-red-400" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="text-2xl font-bold text-red-400">Authentication Required</h3>
+          <p className="text-gray-400 max-w-md">
+            Please sign in to access the voice journal feature. Your conversations are private and secure.
+          </p>
+        </div>
+        <motion.button
+          onClick={() => router.push('/auth/signin?redirectTo=/journal')}
+          className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Sign In to Continue
+        </motion.button>
+      </div>
+    )
+  }
 
   // Show loading state while checking authentication
   if (authLoading) {
@@ -157,9 +189,27 @@ export function Conversation() {
     )
   }
 
-  // Don't render anything if not authenticated
-  if (!user) {
-    return null
+  // Show auth error if there's one
+  if (authError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 gap-6">
+        <div className="p-8 rounded-full bg-red-500/20 border border-red-500/30">
+          <UserX className="h-12 w-12 text-red-400" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="text-2xl font-bold text-red-400">Authentication Error</h3>
+          <p className="text-gray-400 max-w-md">{authError}</p>
+        </div>
+        <motion.button
+          onClick={() => router.push('/auth/signin?redirectTo=/journal')}
+          className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Go to Sign In
+        </motion.button>
+      </div>
+    )
   }
 
   return (

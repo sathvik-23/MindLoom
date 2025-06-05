@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/app/lib/supabase/client';
 import { BackgroundWaves } from '@/components/background-waves';
 
-export default function SignUp() {
+function SignUpForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -15,6 +15,9 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +49,8 @@ export default function SignUp() {
       if (data?.user?.identities?.length === 0) {
         setSuccess(true);
       } else {
-        // Redirect to dashboard on auto-confirmation
-        router.push('/dashboard');
+        // Redirect to intended page or dashboard on auto-confirmation
+        router.push(redirectTo);
       }
     } catch (error: any) {
       setError(error.message || 'An error occurred during registration');
@@ -92,6 +95,12 @@ export default function SignUp() {
           <h1 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
             Create Account
           </h1>
+          
+          {redirectTo !== '/dashboard' && (
+            <div className="bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 px-4 py-3 rounded-lg mb-4 text-center">
+              <p className="text-sm">Create an account to access the voice journal feature</p>
+            </div>
+          )}
           
           {error && (
             <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg mb-4">
@@ -173,7 +182,10 @@ export default function SignUp() {
           <div className="mt-6 text-center text-sm text-gray-400">
             <p>
               Already have an account?{' '}
-              <Link href="/auth/signin" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+              <Link 
+                href={`/auth/signin${redirectTo !== '/dashboard' ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ''}`}
+                className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+              >
                 Sign in
               </Link>
             </p>
@@ -181,5 +193,23 @@ export default function SignUp() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignUp() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col justify-center items-center relative">
+        <BackgroundWaves />
+        <div className="w-full max-w-md z-10">
+          <div className="bg-black/40 backdrop-blur-md p-8 rounded-xl border border-white/10 shadow-xl text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400 mx-auto mb-4"></div>
+            <p className="text-gray-300">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
   );
 }

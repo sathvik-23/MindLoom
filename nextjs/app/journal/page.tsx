@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Conversation } from '@/app/components/conversation'
 import { JournalSidebar } from '@/components/journal-sidebar'
 import { JournalEntries } from '@/components/journal-entries'
+import { AuthGuard } from '@/components/AuthGuard'
 import { motion } from 'framer-motion'
 import {
   BookOpen,
@@ -32,12 +33,13 @@ export default function JournalPage() {
   }
 
   return (
-    <div className="flex h-screen pt-14">
-      {/* Sidebar */}
-      <JournalSidebar />
+    <AuthGuard redirectTo="/journal">
+      <div className="flex h-screen pt-14">
+        {/* Sidebar */}
+        <JournalSidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="border-b border-white/10 bg-black/50 backdrop-blur-xl py-1">
           <div className="px-6 py-2">
@@ -123,6 +125,6 @@ export default function JournalPage() {
           </motion.div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   )
 }

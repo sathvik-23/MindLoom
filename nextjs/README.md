@@ -136,6 +136,3 @@ MIT License - feel free to use this project for your own purposes!
 
 ---
 
-<div align="center">
-  <strong>🏆 Built to win hackathons and change lives 🏆</strong>
-</div>
